@@ -13,9 +13,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
   id       Int    @id @default(autoincrement())
   name     String
   email    String @unique
   password String
+}
+
+model Pokemon {
+  id      Int     @id @default(autoincrement())
+  name    String
+  number  Int     @unique
+  type    String
+  height  Float
+  weight  Float
+  hp      Int
+  attack  Int
+  defense Int
+  // regionId Int?  // se quiser adicionar relacionamento opcional com região
 }
