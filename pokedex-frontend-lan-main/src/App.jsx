@@ -6,6 +6,9 @@ import TeamBuilder from './pages/TeamBuilder'
 import Maps from './pages/Maps'
 import { useAuth } from './AuthContext'
 import { useNavigate } from 'react-router-dom'
+import CreatePokemon from "./pages/CreatePokemon";
+import EditPokemon from "./pages/EditPokemon";
+
 
 
 export default function App() {
@@ -41,6 +44,8 @@ export default function App() {
         <Route path="/collection" element={<Collection />} />
         <Route path="/team" element={<TeamBuilder />} />
         <Route path="/maps" element={<Maps />} />
+        <Route path="/create" element={<CreatePokemon />} />
+        <Route path="/edit/:id" element={<EditPokemon />} />
       </Routes>
     </div>
   )

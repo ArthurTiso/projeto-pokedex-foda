@@ -19,17 +19,34 @@ model User {
   name     String
   email    String @unique
   password String
+  teams    Team[] 
 }
 
+model Region {
+  id       Int       @id @default(autoincrement())
+  name     String
+  pokemons Pokemon[]
+}
+
+
+
 model Pokemon {
-  id      Int     @id @default(autoincrement())
-  name    String
-  number  Int     @unique
-  type    String
-  height  Float
-  weight  Float
-  hp      Int
-  attack  Int
-  defense Int
-  // regionId Int?  // se quiser adicionar relacionamento opcional com região
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String
+  hp        Int
+  attack    Int
+  defense   Int
+  regionId  Int?
+  region    Region?  @relation(fields: [regionId], references: [id])
+  teams     Team[]   @relation("TeamPokemons")
+}
+
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  pokemons  Pokemon[] @relation("TeamPokemons")
 }
