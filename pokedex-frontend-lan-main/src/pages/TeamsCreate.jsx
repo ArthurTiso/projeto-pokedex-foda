@@ -2,11 +2,16 @@ import { useAuth } from "../AuthContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Teams() {
+export default function TeamsCreate() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [teams, setTeams] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [team, setTeam] = useState({
+    name: "",
+    pokemonIds: [],
+    userId: null,
+  });
+
+  const [pokemons, setPokemons] = useState([]);
   const [erro, setErro] = useState("");
 
   useEffect(() => {
@@ -14,65 +19,101 @@ export default function Teams() {
       navigate("/login");
       return;
     }
-
-    fetch("http://localhost:3000/teams")
-      .then((res) => res.json())
-      .then((data) => {
-        setTeams(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setErro("Erro ao carregar times");
-        setLoading(false);
-      });
+    setTeam((prev) => ({ ...prev, userId: user.id }));
   }, [user, navigate]);
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Deseja realmente deletar este time?");
-    if (!confirmDelete) return;
+  useEffect(() => {
+    fetch("http://localhost:3000/pokemons")
+      .then((res) => res.json())
+      .then((data) => setPokemons(data))
+      .catch(() => setErro("Erro ao carregar Pokémons"));
+  }, []);
+
+  const handleChange = (e) => {
+    setTeam({ ...team, [e.target.name]: e.target.value });
+  };
+
+  const togglePokemon = (id) => {
+    setTeam((prev) => {
+      const updatedIds = prev.pokemonIds.includes(id)
+        ? prev.pokemonIds.filter((pid) => pid !== id)
+        : [...prev.pokemonIds, id];
+      return { ...prev, pokemonIds: updatedIds };
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     try {
-      const res = await fetch(`http://localhost:3000/teams/${id}`, {
-        method: "DELETE",
+      const res = await fetch("http://localhost:3000/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: team.name,
+          userId: user.id,
+          pokemonIds: team.pokemonIds, // ✅ CORRETO
+        }),
       });
+
       if (res.ok) {
-        setTeams((prev) => prev.filter((team) => team.id !== id));
+        navigate("/teams");
       } else {
-        alert("Erro ao deletar time");
+        const data = await res.json();
+        if (typeof data.message === "string") {
+          setErro(data.message);
+        } else if (typeof data.message === "object") {
+          setErro(JSON.stringify(data.message));
+        } else {
+          setErro("Erro ao criar time.");
+        }
       }
-    } catch {
-      alert("Erro ao deletar time");
+    } catch (err) {
+      setErro("Erro ao conectar com o servidor.");
     }
   };
 
-  if (loading) return <p>Carregando times...</p>;
-  if (erro) return <p style={{ color: "red" }}>{erro}</p>;
-
   return (
     <div>
-      <h2>Meus Times</h2>
-      <button onClick={() => navigate("/teams/create")}>Criar Novo Time</button>
-      <ul>
-        {teams.map((team) => (
-          <li key={team.id} style={{ marginBottom: "1em" }}>
-            <strong>{team.name}</strong> — Criado por: {team.user?.name || team.user?.email}
-            <button onClick={() => navigate(`/teams/edit/${team.id}`)} style={{ marginLeft: 8 }}>
-              Editar
-            </button>
-            <button onClick={() => handleDelete(team.id)} style={{ marginLeft: 8 }}>
-              Deletar
-            </button>
-            <div>
-              Pokémons:{" "}
-              {team.pokemons?.map((p) => (
-                <span key={p.id} style={{ marginRight: 8 }}>
-                  {p.name}
-                </span>
-              ))}
-            </div>
-          </li>
-        ))}
-      </ul>
+      <h2>Criar Novo Time</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Nome do Time"
+          value={team.name}
+          onChange={handleChange}
+          required
+        />
+
+        <h4>Escolha até 6 Pokémons:</h4>
+        <ul>
+          {pokemons.map((poke) => (
+            <li key={poke.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={team.pokemonIds.includes(poke.id)}
+                  onChange={() => togglePokemon(poke.id)}
+                  disabled={
+                    !team.pokemonIds.includes(poke.id) &&
+                    team.pokemonIds.length >= 6
+                  }
+                />
+                {poke.name} ({poke.type})
+              </label>
+            </li>
+          ))}
+        </ul>
+
+        <button type="submit">Criar Time</button>
+      </form>
+
+      {erro && (
+        <p style={{ color: "red" }}>
+          {typeof erro === "string" ? erro : JSON.stringify(erro)}
+        </p>
+      )}
     </div>
   );
 }

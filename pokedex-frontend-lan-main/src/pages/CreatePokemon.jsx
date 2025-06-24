@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
@@ -16,6 +16,8 @@ export default function CreatePokemon() {
     defense: ""
   });
 
+  const [regionId, setRegionId] = useState("");
+  const [regions, setRegions] = useState([]);
   const [erro, setErro] = useState("");
 
   // Protege rota
@@ -23,6 +25,13 @@ export default function CreatePokemon() {
     navigate("/login");
     return null;
   }
+
+  useEffect(() => {
+    fetch("http://localhost:3000/regions")
+      .then((res) => res.json())
+      .then((data) => setRegions(data))
+      .catch(() => setErro("Erro ao carregar regiões"));
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,7 +51,8 @@ export default function CreatePokemon() {
           weight: parseFloat(form.weight),
           hp: parseInt(form.hp),
           attack: parseInt(form.attack),
-          defense: parseInt(form.defense)
+          defense: parseInt(form.defense),
+          regionId: parseInt(regionId)
         })
       });
 
@@ -73,6 +83,19 @@ export default function CreatePokemon() {
             />
           </div>
         ))}
+
+        <div>
+          <label>
+            Região:
+            <select value={regionId} onChange={(e) => setRegionId(e.target.value)} required>
+              <option value="">Selecione uma região</option>
+              {regions.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <button type="submit">Cadastrar</button>
       </form>
       {erro && <p style={{ color: "red" }}>{erro}</p>}

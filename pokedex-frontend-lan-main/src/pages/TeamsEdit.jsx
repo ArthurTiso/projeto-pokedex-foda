@@ -7,7 +7,11 @@ export default function TeamsEdit() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [team, setTeam] = useState(null);
+  const [team, setTeam] = useState({
+    name: "",
+    pokemonIds: [],
+  });
+
   const [pokemons, setPokemons] = useState([]);
   const [erro, setErro] = useState("");
 
@@ -19,9 +23,14 @@ export default function TeamsEdit() {
 
     fetch(`http://localhost:3000/teams/${id}`)
       .then((res) => res.json())
-      .then((data) => setTeam(data))
+      .then((data) => {
+        setTeam({
+          name: data.name,
+          pokemonIds: data.pokemons.map((p) => p.id),
+        });
+      })
       .catch(() => setErro("Erro ao carregar o time"));
-  }, [id, user]);
+  }, [id, user, navigate]);
 
   useEffect(() => {
     fetch("http://localhost:3000/pokemons")
@@ -36,23 +45,24 @@ export default function TeamsEdit() {
 
   const togglePokemon = (pokeId) => {
     setTeam((prev) => {
-      const selected = prev.pokemons.map((p) => p.id);
-      const updatedIds = selected.includes(pokeId)
-        ? selected.filter((id) => id !== pokeId)
-        : [...selected, pokeId];
-      return { ...prev, pokemons: updatedIds.map(id => ({ id })) };
+      const updated = prev.pokemonIds.includes(pokeId)
+        ? prev.pokemonIds.filter((id) => id !== pokeId)
+        : [...prev.pokemonIds, pokeId];
+      return { ...prev, pokemonIds: updated };
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const pokemonIds = team.pokemons.map(p => p.id);
 
     try {
       const res = await fetch(`http://localhost:3000/teams/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: team.name, pokemonIds }),
+        body: JSON.stringify({
+          name: team.name,
+          pokemonIds: team.pokemonIds,
+        }),
       });
 
       if (res.ok) {
@@ -66,9 +76,7 @@ export default function TeamsEdit() {
     }
   };
 
-  if (!team) return <p>Carregando time...</p>;
-
-  const selectedIds = team.pokemons.map(p => p.id);
+  if (!team.name && team.pokemonIds.length === 0) return <p>Carregando time...</p>;
 
   return (
     <div>
@@ -90,11 +98,11 @@ export default function TeamsEdit() {
               <label>
                 <input
                   type="checkbox"
-                  checked={selectedIds.includes(poke.id)}
+                  checked={team.pokemonIds.includes(poke.id)}
                   onChange={() => togglePokemon(poke.id)}
                   disabled={
-                    !selectedIds.includes(poke.id) &&
-                    selectedIds.length >= 6
+                    !team.pokemonIds.includes(poke.id) &&
+                    team.pokemonIds.length >= 6
                   }
                 />
                 {poke.name}
