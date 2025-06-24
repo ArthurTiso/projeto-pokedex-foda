@@ -29,6 +29,21 @@ export default function Teams() {
       });
   }, [user, navigate]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Deseja realmente deletar este time?")) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/teams/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setTeams(prev => prev.filter(team => team.id !== id));
+      } else {
+        alert("Erro ao deletar time");
+      }
+    } catch {
+      alert("Erro ao deletar time");
+    }
+  };
+
   if (loading) return <p>Carregando times...</p>;
   if (erro) return <p style={{ color: "red" }}>{erro}</p>;
 
@@ -42,6 +57,12 @@ export default function Teams() {
             <strong>{team.name}</strong>
             <button onClick={() => navigate(`/teams/edit/${team.id}`)} style={{ marginLeft: 8 }}>
               Editar
+            </button>
+            <button
+              onClick={() => handleDelete(team.id)}
+              style={{ marginLeft: 8, color: "red" }}
+            >
+              Deletar
             </button>
           </li>
         ))}
