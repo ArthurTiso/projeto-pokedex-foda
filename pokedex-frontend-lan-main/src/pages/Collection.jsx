@@ -59,7 +59,7 @@ export default function Collection() {
       <h2>Sua Coleção</h2>
       <p>Bem-vindo, {user.name || user.email}!</p>
 
-      {/* ✅ Botão agora no topo da tela */}
+      
       <button onClick={() => navigate("/create")}>Cadastrar Novo Pokémon</button>
 
       <ul>

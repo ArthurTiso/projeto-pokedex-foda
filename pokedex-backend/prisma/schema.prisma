@@ -28,19 +28,24 @@ model Region {
   pokemons Pokemon[]
 }
 
-
-
 model Pokemon {
   id        Int      @id @default(autoincrement())
   name      String
-  type      String
+  number    Int      @unique
+  type      String 
+  height    Float
+  weight    Float
   hp        Int
   attack    Int
   defense   Int
+
   regionId  Int?
   region    Region?  @relation(fields: [regionId], references: [id])
+
   teams     Team[]   @relation("TeamPokemons")
 }
+
+
 
 
 model Team {
